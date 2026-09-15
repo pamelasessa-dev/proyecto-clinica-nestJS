@@ -1,13 +1,53 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
+
 import { MedicosService } from './medicos.service.js';
 
 @Controller('medicos')
 export class MedicosController {
-    constructor(private readonly medicosService: MedicosService){}
+  constructor(private readonly medicosService: MedicosService) {}
 
-    @Get()
-    findAll(){
-        return this.medicosService.findAll();
+  @Get()
+  findAll() {
+    return this.medicosService.findAll();
+  }
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const medico = await this.medicosService.findOne(Number(id));
+
+    if (!medico) {
+      throw new NotFoundException('Médico no encontrado');
     }
-
+    return medico;
+  }
+  @Post()
+  create(@Body() body: any) {
+    return this.medicosService.create({
+      nombre: body.nombre,
+      apellido: body.apellido,
+      id_especialidad: body.id_especialidad,
+      id_usuario: body.id_usuario,
+    });
+  }
+  @Put(':id')
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.medicosService.update(Number(id), {
+      nombre: body.nombre,
+      apellido: body.apellido,
+      id_especialidad: body.id_especialidad,
+      id_usuario: body.id_usuario,
+    });
+  }
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.medicosService.remove(Number(id));
+  }
 }
