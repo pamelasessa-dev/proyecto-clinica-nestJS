@@ -7,7 +7,7 @@ import {
   Matches,
 } from 'class-validator';
 
-export class CreatePacientDto {
+export class CreatePacienteDto {
   @IsString({ message: 'La Cédula debe ser una cadena de texto'})
   @IsNotEmpty({ message: 'La Cédula es obligatoria'})
   @Matches(/^\d+$/, { message: 'La Cédula debe contener únicamente números, sin puntos ni guiones'})

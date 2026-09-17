@@ -6,10 +6,12 @@ import {
   NotFoundException,
   Param,
   Post,
-  Put,
+  Patch,
 } from '@nestjs/common';
 
 import { MedicosService } from './medicos.service.js';
+import { CreateMedicoDto } from './dto/create-medico.dto.js';
+import { UpdateMedicoDto } from './dto/update-medico.dto.js';
 
 @Controller('medicos')
 export class MedicosController {
@@ -19,6 +21,7 @@ export class MedicosController {
   findAll() {
     return this.medicosService.findAll();
   }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const medico = await this.medicosService.findOne(Number(id));
@@ -28,24 +31,17 @@ export class MedicosController {
     }
     return medico;
   }
+
   @Post()
-  create(@Body() body: any) {
-    return this.medicosService.create({
-      nombre: body.nombre,
-      apellido: body.apellido,
-      id_especialidad: body.id_especialidad,
-      id_usuario: body.id_usuario,
-    });
+  create(@Body() dto: CreateMedicoDto) {
+    return this.medicosService.create(dto);
   }
-  @Put(':id')
-  update(@Param('id') id: string, @Body() body: any) {
-    return this.medicosService.update(Number(id), {
-      nombre: body.nombre,
-      apellido: body.apellido,
-      id_especialidad: body.id_especialidad,
-      id_usuario: body.id_usuario,
-    });
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateMedicoDto) {
+    return this.medicosService.update(Number(id), dto);
   }
+  
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.medicosService.remove(Number(id));
