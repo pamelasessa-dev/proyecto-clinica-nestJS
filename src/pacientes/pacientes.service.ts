@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from "../prisma/prisma.service.js";
-
 @Injectable()
 export class PacientesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -9,7 +8,7 @@ export class PacientesService {
     return this.prisma.paciente.findMany()
   }
   findOne(CI:number){
-    return this,this.prisma.paciente.findUnique({
+    return this.prisma.paciente.findUnique({
       where:{CI},
     });
   }
@@ -22,11 +21,15 @@ export class PacientesService {
     telefono: string;
     email: string;
   }) {
+    if(data.fecha_nacimiento > new Date()){
+      throw new BadRequestException('La fecha de nacimiento no puede ser futura ');
+    }
+
     return this.prisma.paciente.create({
       data,
     });
   }
-  update(CI:number,
+  async update(CI:number,
     data:{      
       nombre?: string;
       apellido?: string;
@@ -34,16 +37,35 @@ export class PacientesService {
       direccion?: string;
       telefono?: string;
       email?: string;
-    },
-  ){
-    return this.prisma.paciente.update({
-      where: {CI},
-      data,
-    });
-  }
-  remove(CI:number){
-    return this.prisma.paciente.delete({
-      where: {CI},
-    });
-  }
+    }){
+      const paciente = await this.prisma.paciente.findUnique({
+        where: { CI },
+      });
+      if (!paciente){
+        throw new NotFoundException('Paciente no encontrado');
+      }
+      if(data.fecha_nacimiento && data.fecha_nacimiento > new Date()){
+        throw new BadRequestException('La fecha de nacimiento no puede ser futura');
+      }
+      
+      return this.prisma.paciente.update({
+        where: {CI},
+        data,
+      });
+    } 
+    async remove(CI:number){
+      const paciente = await this.prisma.paciente.findUnique({
+        where: { CI },
+      });
+      if(!paciente){
+        throw new NotFoundException('Paciente no encontrado');
+      }
+      await this.prisma.paciente.delete({
+        where: { CI },
+      });
+
+      return{
+        message: 'Paciente eliminado con éxito',
+      };
+    }
 }

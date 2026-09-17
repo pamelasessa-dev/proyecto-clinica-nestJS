@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
@@ -23,7 +23,7 @@ export class MedicosService {
       data,
     });
   }
-  update(
+  async update(
     id_medico: number,
     data: {
       nombre?: string;
@@ -32,14 +32,29 @@ export class MedicosService {
       id_usuario?: number;
     },
   ) {
+    const medico = await this.prisma.medico.findUnique({
+      where: { id_medico },
+    });
+    if(!medico){
+      throw new NotFoundException('Médico no encontrado')
+    }
     return this.prisma.medico.update({
       where: { id_medico },
       data,
     });
   }
-  remove(id_medico: number) {
-    return this.prisma.medico.delete({
-      where: { id_medico },
+  async remove(id_medico: number) {
+    const medico = await this.prisma.medico.findUnique({
+      where: { id_medico},
     });
-  }
+    if(!medico){
+      throw new NotFoundException('Medico no encontrado');
+    }
+    await this.prisma.medico.delete({
+        where: { id_medico },
+      });
+      return{
+        message: 'Medico eliminado con éxito',
+      };
+    }
 }
