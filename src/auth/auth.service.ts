@@ -1,35 +1,107 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+
 import * as bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { UsuariosService } from "../usuarios/usuarios.service.js";
-import { CreateUsuarioDto } from "../usuarios/dto/create-usuario.dto.js";
-import { LoginDto } from "./dto/login.dto.js";
+
+import { PrismaService } from '../prisma/prisma.service.js';
+import { LoginDto } from './dto/login.dto.js';
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly usuariosService: UsuariosService){}
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
 
-    async register(createUsuarioDto: CreateUsuarioDto){
-        return this.usuariosService.create(createUsuarioDto);
+  async register(
+    nombre: string,
+    apellido: string,
+    email: string,
+    password: string,
+  ) {
+    const usuarioExistente =
+      await this.prisma.usuario.findUnique({
+        where: { email },
+      });
+
+    if (usuarioExistente) {
+      throw new ConflictException(
+        'El email ya está registrado',
+      );
     }
-    async login(loginDto: LoginDto){
-        const usuario = await this.usuariosService.findByEmail(loginDto.email);
-        if(!usuario){
-            throw new UnauthorizedException('Credenciales inválidas');
-        }
-        
-        const token = jwt.sign(
-            {
-                id: usuario.id,
-                email: usuario.email,
-                rol: usuario.rol,
-                nombre: usuario.nombre,
-            },
-            process.env.JWT_SECRET as string,
-            { 
-                expiresIn: '8h' 
-            },
-        );
-        return { token };
+
+    const passwordHash = await bcrypt.hash(
+      password,
+      10,
+    );
+
+    const usuario = await this.prisma.usuario.create({
+      data: {
+        nombre,
+        apellido,
+        email,
+        password: passwordHash,
+        rol: 'RECEPCIONISTA',
+      },
+      select: {
+        id: true,
+        nombre: true,
+        apellido: true,
+        email: true,
+        rol: true,
+      },
+    });
+
+    return usuario;
+  }
+
+  async login(loginDto: LoginDto) {
+    const { email, password } = loginDto;
+
+    const usuario =
+      await this.prisma.usuario.findUnique({
+        where: { email },
+      });
+
+    if (
+      !usuario ||
+      !(await bcrypt.compare(
+        password,
+        usuario.password,
+      ))
+    ) {
+      throw new UnauthorizedException(
+        'Credenciales inválidas',
+      );
     }
+
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret) {
+      throw new InternalServerErrorException(
+        'La configuración de autenticación no está disponible',
+      );
+    }
+
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        nombres: usuario.nombre,
+        apellidos: usuario.apellido,
+        email: usuario.email,
+        role: usuario.rol,
+      },
+      secret,
+      {
+        expiresIn: '8h',
+      },
+    );
+
+    return { token };
+  }
 }
