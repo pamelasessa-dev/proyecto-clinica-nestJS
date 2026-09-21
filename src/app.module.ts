@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { UsuariosController } from './usuarios/usuarios.controller.js';
 import { UsuariosService } from './usuarios/usuarios.service.js';
 import { UsuariosModule } from './usuarios/usuarios.module.js';
+import { CitasModule } from './citas/citas.module.js';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
     MedicosModule,
     AuthModule,
     UsuariosModule,
+    CitasModule,
   ],
   controllers: [AppController, UsuariosController],
   providers: [AppService, UsuariosService],
