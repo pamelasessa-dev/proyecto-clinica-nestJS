@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import {DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { PrismaExceptionFilter } from './prisma/prisma-exception.filter.js';
-
+import { LoggingInterceptor } from './common/logging.interceptor.js';
 
 async function bootstrap(){
   const app = await NestFactory.create(AppModule);
@@ -37,6 +37,8 @@ async function bootstrap(){
   SwaggerModule.setup('api/docs', app, document)
 
   app.useGlobalFilters(new PrismaExceptionFilter());
+
+  app.useGlobalInterceptors(new LoggingInterceptor())
 
   await app.listen(process.env.PORT ?? 3000);
 }
