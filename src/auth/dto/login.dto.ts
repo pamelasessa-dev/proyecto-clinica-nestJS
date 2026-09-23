@@ -6,6 +6,7 @@ import {
 } from 'class-validator';
 
 export class LoginDto {
+
   @IsEmail({}, {
     message: 'El email debe tener un formato válido',
   })
