@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { Rol } from '../../generated/prisma/enums.js';
 
-export class CreateUsuarioDto {
+export class CreateUsuarioAdminDto {
     @IsString({ message: 'El nombre debe ser un texto'})
     @IsNotEmpty({message: 'El nombre es obligatorio'})
     nombre: string;
@@ -25,4 +25,6 @@ export class CreateUsuarioDto {
 
     @IsEnum(Rol, {message:'El rol no es válido'})
     rol: Rol;
+
+    
 }

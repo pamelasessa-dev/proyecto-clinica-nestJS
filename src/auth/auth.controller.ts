@@ -6,6 +6,7 @@ import {
 
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
 
 @Controller('auth')
 export class AuthController {
@@ -14,21 +15,12 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(
-    @Body()
-    body: {
-      nombre: string;
-      apellido: string;
-      email: string;
-      password: string;
-      rol: string;
-    },
-  ) {
+  async register(@Body() registerDto: RegisterDto){
     return this.authService.register(
-      body.nombre,
-      body.apellido,
-      body.email,
-      body.password,
+      registerDto.nombre,
+      registerDto.apellido,
+      registerDto.email,
+      registerDto.password,
     );
   }
 
