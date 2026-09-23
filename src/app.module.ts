@@ -12,12 +12,12 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
 import { CitasModule } from './citas/citas.module.js';
 
 @Module({
-  imports: [
+  imports: [ 
     PrismaModule,
-    PacientesModule,
-    MedicosModule,
     AuthModule,
     UsuariosModule,
+    PacientesModule,
+    MedicosModule,
     CitasModule,
   ],
   controllers: [AppController, UsuariosController],

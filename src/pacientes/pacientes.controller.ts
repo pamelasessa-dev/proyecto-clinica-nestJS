@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { PacientesService } from './pacientes.service.js';
 import { CreatePacienteDto } from './dto/create-paciente.dto.js';
 import { UpdatePacienteDto } from './dto/update-paciente.dto.js';
@@ -19,15 +19,18 @@ import { Roles } from '../auth/decorators/roles.decorator.js';
 
 @UseGuards(JwnAuthGuard, RolesGuard)
 @Roles('RECEPCIONISTA')
+@ApiBearerAuth()
 @Controller('pacientes')
 export class PacientesController {
   constructor(private readonly pacientesService: PacientesService) {}
 
+  @ApiOperation({ summary: 'Lista de los pacientes'})
   @Get()
   findAll() {
     return this.pacientesService.findAll();
   }
 
+  @ApiOperation({ summary: 'Obtiene un paciente por ID' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const paciente = await this.pacientesService.findOne(Number(id));
@@ -38,6 +41,7 @@ export class PacientesController {
     return paciente;
   }
   
+  @ApiOperation({ summary: 'Crea un nuevo registro de paciente'})
   @Post()
   create(@Body() body: CreatePacienteDto) {
     return this.pacientesService.create({
@@ -50,6 +54,7 @@ export class PacientesController {
       email: body.email,
     });
   }
+  @ApiOperation({ summary: 'Modifica los datos de un paciente'})
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: UpdatePacienteDto) {
     return this.pacientesService.update(Number(id), {
@@ -61,6 +66,7 @@ export class PacientesController {
       email: body.email,
     });
   }
+  @ApiOperation({ summary: 'Eliminar un paciente'})
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.pacientesService.remove(Number(id));
