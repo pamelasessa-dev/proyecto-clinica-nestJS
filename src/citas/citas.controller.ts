@@ -7,16 +7,17 @@ import {
 } from '@nestjs/common';
 import { CitasService} from './citas.service.js';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { CreateCitaDto } from './dto/create-cita.dto.js';
 
 @ApiBearerAuth()
 @Controller('citas')
 export class CitasController {
   constructor(private readonly citasService: CitasService) {}
 
-  @ApiOperation({summary:'Crear una nueva cita'})
+    @ApiOperation({summary:'Crear una nueva cita'})
   @Post()
-  create(@Body() body: any) {
-    return this.citasService.create(body)
+  create( @Body() createCitaDto : CreateCitaDto) {
+    return this.citasService.create(createCitaDto);
   }
 
   @ApiOperation({summary: 'Lista de todas las citas'})

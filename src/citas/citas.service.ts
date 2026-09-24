@@ -1,35 +1,25 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
-import { PacientesService } from '../pacientes/pacientes.service.js';
-import { scheduled } from 'rxjs';
+import { CreateCitaDto } from './dto/create-cita.dto.js';
 
 @Injectable()
 export class CitasService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly pacientesService: PacientesService
   ) {}
 
-  async create(data: { 
-    pacienteCI: number;
-    idMedico:number; 
-    scheduledAt: Date;
-}) {
-    const paciente = await this.pacientesService.findOne(data.pacienteCI)
-    if (!paciente) throw new NotFoundException('El paciente no existe')
-
+  async create(createCitaDto: CreateCitaDto) {
     return this.prisma.cita.create({
-    data: {
-        fecha_hora: data.scheduledAt,
-        CI_paciente: data.pacienteCI,
-        id_medico:data.idMedico,
-        },
-  });
-
-}
+      data: {
+        CI_paciente: createCitaDto.CI_paciente,
+        id_medico: createCitaDto.id_medico,
+        fecha_hora: new Date(createCitaDto.fecha_hora),
+      },
+    });
+  }
 
   findAll() {
-    return this.prisma.cita.findMany()
+    return this.prisma.cita.findMany();
   }
 }

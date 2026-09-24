@@ -1,21 +1,19 @@
-
 import {
   Injectable,
   UnauthorizedException,
   ConflictException,
-  InternalServerErrorException,
 } from '@nestjs/common';
-
-import * as bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-
+import bcrypt from 'bcryptjs';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { LoginDto } from './dto/login.dto.js';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(
@@ -80,25 +78,32 @@ export class AuthService {
       );
     }
 
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new InternalServerErrorException(
-        'La configuración de autenticación no está disponible',
+    const secret =
+      this.configService.getOrThrow<string>(
+        'JWT_SECRET',
       );
-    }
+
+    const expiresIn =
+      this.configService.getOrThrow<string>(
+        'JWT_EXPIRES_IN',
+      );
+
+    const options: SignOptions = {
+      expiresIn:
+        expiresIn as SignOptions['expiresIn'],
+    };
 
     const token = jwt.sign(
       {
-        sub:usuario.id,
-        role:usuario.rol,
+        sub: usuario.id,
+        role: usuario.rol,
       },
       secret,
-      {
-        expiresIn: '8h',
-      },
+      options,
     );
 
-    return { token };
+    return {
+      token,
+    };
   }
 }

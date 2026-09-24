@@ -2,11 +2,11 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
-  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
 
 interface JwtPayload {
   sub: number;
@@ -15,39 +15,49 @@ interface JwtPayload {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
+  constructor(
+    private readonly configService: ConfigService,
+  ) {}
+
+  canActivate(
+    context: ExecutionContext,
+  ): boolean {
     const request = context.switchToHttp().getRequest();
 
     const authHeader = request.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Token no proporcionado');
-    }
-
-    // Bearer eyJhbGci...
-    const token = authHeader.substring(7);
-
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new InternalServerErrorException(
-        'JWT_SECRET no está configurado',
+    if ( !authHeader || !authHeader.startsWith('Bearer ')
+    ) {
+      throw new UnauthorizedException(
+        'Token no proporcionado',
       );
     }
 
-    try {
-      const decoded = jwt.verify(token, secret);
+    const token = authHeader.substring(7);
 
-      // jwt.verify() puede devolver string u objeto
+    const secret = this.configService.getOrThrow<string>(
+        'JWT_SECRET',
+      );
+
+    try {
+      const decoded = jwt.verify(
+        token,
+        secret,
+      );
+
       if (typeof decoded === 'string') {
-        throw new UnauthorizedException('Token inválido');
+        throw new UnauthorizedException(
+          'Token inválido',
+        );
       }
 
       if (
         typeof decoded.sub !== 'number' ||
         typeof decoded.role !== 'string'
       ) {
-        throw new UnauthorizedException('Token inválido');
+        throw new UnauthorizedException(
+          'Token inválido',
+        );
       }
 
       const user: JwtPayload = {
@@ -59,7 +69,9 @@ export class JwtAuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
+      if (
+        error instanceof UnauthorizedException
+      ) {
         throw error;
       }
 

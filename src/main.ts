@@ -1,17 +1,21 @@
-import 'dotenv/config'
+
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module.js';
 import { PrismaExceptionFilter } from './prisma/prisma-exception.filter.js';
-import { LoggingInterceptor } from './common/logging.interceptor.js';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor.js';
 
 async function bootstrap(){
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
+  app.useGlobalFilters(new PrismaExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
+      forbidNonWhitelisted: true,
       transform: true,
     }),
   );
@@ -38,9 +42,9 @@ async function bootstrap(){
 
   app.useGlobalFilters(new PrismaExceptionFilter());
 
-  app.useGlobalInterceptors(new LoggingInterceptor())
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(configService.getOrThrow<number>('PORT'))
 }
 
 bootstrap();
