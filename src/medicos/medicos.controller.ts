@@ -3,53 +3,73 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
-  Post,
+  ParseIntPipe,
   Patch,
+  Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
 import { MedicosService } from './medicos.service.js';
 import { CreateMedicoDto } from './dto/create-medico.dto.js';
 import { UpdateMedicoDto } from './dto/update-medico.dto.js';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
+import { Rol } from '../generated/prisma/enums.js';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('RECEPCIONISTA')
 @Controller('medicos')
 export class MedicosController {
-  constructor(private readonly medicosService: MedicosService) {}
+  constructor(
+    private readonly medicosService: MedicosService,
+  ) {}
 
   @Get()
-  findAll() {
-    return this.medicosService.findAll();
+  @Roles(Rol.RECEPCIONISTA, Rol.GERENCIA)
+  findAll(
+    @Query('id_especialidad')
+    id_especialidad?: string,
+  ) {
+    const idEspecialidad = id_especialidad
+      ? Number(id_especialidad)
+      : undefined;
+
+    return this.medicosService.findAll(
+      idEspecialidad,
+    );
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const medico = await this.medicosService.findOne(Number(id));
-
-    if (!medico) {
-      throw new NotFoundException('Médico no encontrado');
-    }
-    return medico;
+  @Roles(Rol.RECEPCIONISTA, Rol.GERENCIA)
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.medicosService.findOne(id);
   }
 
   @Post()
+  @Roles(Rol.GERENCIA)
   create(@Body() dto: CreateMedicoDto) {
     return this.medicosService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateMedicoDto) {
-    return this.medicosService.update(Number(id), dto);
+  @Roles(Rol.GERENCIA)
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateMedicoDto,
+  ) {
+    return this.medicosService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.medicosService.remove(Number(id));
+  @Roles(Rol.GERENCIA)
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.medicosService.remove(id);
   }
 }
