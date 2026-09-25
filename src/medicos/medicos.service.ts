@@ -1,18 +1,30 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class MedicosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
 
-  findAll() {
-    return this.prisma.medico.findMany();
+  findAll(id_especialidad?: number) {
+    return this.prisma.medico.findMany({
+      where: id_especialidad
+        ? { id_especialidad }
+        : undefined,
+    });
   }
+
   findOne(id_medico: number) {
     return this.prisma.medico.findUnique({
       where: { id_medico },
     });
   }
+
   create(data: {
     nombre: string;
     apellido: string;
@@ -23,6 +35,7 @@ export class MedicosService {
       data,
     });
   }
+
   async update(
     id_medico: number,
     data: {
@@ -32,29 +45,41 @@ export class MedicosService {
       id_usuario?: number;
     },
   ) {
-    const medico = await this.prisma.medico.findUnique({
-      where: { id_medico },
-    });
-    if(!medico){
-      throw new NotFoundException('Médico no encontrado')
+    const medico =
+      await this.prisma.medico.findUnique({
+        where: { id_medico },
+      });
+
+    if (!medico) {
+      throw new NotFoundException(
+        'Médico no encontrado',
+      );
     }
+
     return this.prisma.medico.update({
       where: { id_medico },
       data,
     });
   }
+
   async remove(id_medico: number) {
-    const medico = await this.prisma.medico.findUnique({
-      where: { id_medico},
-    });
-    if(!medico){
-      throw new NotFoundException('Medico no encontrado');
-    }
-    await this.prisma.medico.delete({
+    const medico =
+      await this.prisma.medico.findUnique({
         where: { id_medico },
       });
-      return{
-        message: 'Medico eliminado con éxito',
-      };
+
+    if (!medico) {
+      throw new NotFoundException(
+        'Médico no encontrado',
+      );
     }
+
+    await this.prisma.medico.delete({
+      where: { id_medico },
+    });
+
+    return {
+      message: 'Médico eliminado con éxito',
+    };
+  }
 }
