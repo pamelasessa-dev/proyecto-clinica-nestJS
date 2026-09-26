@@ -5,13 +5,43 @@ export class PacientesService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
-    return this.prisma.paciente.findMany()
+    return this.prisma.paciente.findMany({
+      orderBy: {
+        apellido: 'asc',
+      },
+    });
   }
   findOne(CI:number){
     return this.prisma.paciente.findUnique({
       where:{CI},
     });
   }
+  async findExpediente(CI: number) {
+    const paciente = await this.prisma.paciente.findUnique({
+      where: { CI },
+      include: {
+        citas: {
+          include: {
+            medico: {
+              include: {
+                especialidad: true,
+              },
+            },
+          },
+          orderBy: {
+            fecha_hora: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!paciente) {
+      throw new NotFoundException('Paciente no encontrado');
+    }
+
+    return paciente;
+  }
+
   create(data:{
     CI:number;
     nombre: string;

@@ -18,7 +18,7 @@ import { envValidationSchema } from './config/env.validation.js';
       validationSchema: envValidationSchema,
       validationOptions: {
         libraryOptions: {
-          allowUnknown: false,
+          allowUnknown: true,
           abortEarly: false,
         },
       },

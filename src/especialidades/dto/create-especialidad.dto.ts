@@ -4,8 +4,10 @@ import {
   Matches,
   MinLength,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateEspecialidadDto {
+  @ApiProperty({ description: 'Nombre de la especialidad.', example: 'Cardiología' })
   @IsString({ message: 'El nombre debe ser un texto' })
   @IsNotEmpty({ message: 'El nombre es un dato obligatorio' })
   @MinLength(2, {

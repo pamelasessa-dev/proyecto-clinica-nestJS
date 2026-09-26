@@ -3,9 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-
 import { PrismaService } from '../prisma/prisma.service.js';
-
 import { CreateEspecialidadDto } from './dto/create-especialidad.dto.js';
 import { UpdateEspecialidadDto } from './dto/update-especialidad.dto.js';
 
@@ -26,9 +24,26 @@ export class EspecialidadesService {
   }
 
   findAll() {
-    return this.prisma.especialidad.findMany();
+    return this.prisma.especialidad.findMany({
+      orderBy: {
+        nombre:'asc',
+      },
+    });
   }
+  async findOne(id_especialidad: number) {
+    const especialidad = await this.prisma.especialidad.findUnique({
+      where: { id_especialidad },
+      include: {
+        medicos: true,
+      },
+    });
 
+    if (!especialidad) {
+      throw new NotFoundException('Especialidad no encontrada');
+    }
+
+    return especialidad;
+  }
   async update(
     id_especialidad: number,
     updateEspecialidadDto: UpdateEspecialidadDto,
