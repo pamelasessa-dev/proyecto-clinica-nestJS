@@ -3,8 +3,14 @@ import {
   IsInt,
   IsNotEmpty,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCitaDto {
+
+  @ApiProperty({
+    description: 'CI del paciente que tendrá la cita.',
+    example: 12345678,
+  })
   @IsInt({
     message: 'El CI del paciente debe ser un número entero',
   })
@@ -13,6 +19,10 @@ export class CreateCitaDto {
   })
   CI_paciente: number;
 
+  @ApiProperty({
+    description: 'ID del médico que atenderá la cita.',
+    example: 1,
+  })
   @IsInt({
     message: 'El ID del médico debe ser un número entero',
   })
@@ -21,6 +31,10 @@ export class CreateCitaDto {
   })
   id_medico: number;
 
+  @ApiProperty({
+    description: 'Fecha y hora de la cita',
+    example: '2026-10-01T10:00:00.000Z',
+  })
   @IsDateString(
     {},
     {

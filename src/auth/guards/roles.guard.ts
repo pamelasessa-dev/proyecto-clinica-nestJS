@@ -25,8 +25,6 @@ export class RolesGuard implements CanActivate {
         ],
       );
 
-    // Si no se especificaron roles,
-    // no hacemos ninguna restricción adicional.
     if (!requiredRoles) {
       return true;
     }

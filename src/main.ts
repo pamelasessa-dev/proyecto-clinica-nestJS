@@ -40,8 +40,6 @@ async function bootstrap(){
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api/docs', app, document)
 
-  app.useGlobalFilters(new PrismaExceptionFilter());
-
   app.useGlobalInterceptors(new LoggingInterceptor());
 
   await app.listen(configService.getOrThrow<number>('PORT'))

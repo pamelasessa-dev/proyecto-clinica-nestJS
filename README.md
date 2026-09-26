@@ -8,133 +8,453 @@ API backend para la gestión de pacientes, médicos, especialidades, usuarios y 
 
 El proyecto fue desarrollado utilizando:
 
-NestJS
-TypeScript
-Prisma ORM
-PostgreSQL
-JWT para autenticación
-Swagger para documentación de la API
-class-validator para validación de datos
+* NestJS
+* TypeScript
+* Prisma ORM
+* PostgreSQL
+* JWT para autenticación
+* Swagger para documentación de la API
+* class-validator para validación de datos
 
 ## Instalación
 
+### Requisitos
+
+* Node.js
+* pnpm
+* PostgreSQL
+
+Instalar las dependencias:
+
+```bash
 pnpm install
+```
 
 ## Variables de entorno
 
-Configurar las variables de entorno tomando como referencia:
+Configurar las variables de entorno tomando como referencia el archivo:
 
+```text
 .env.example
+```
+
+Generar Prisma Client:
+
+```bash
+pnpm prisma generate
+```
 
 Luego ejecutar la aplicación en modo desarrollo:
 
+```bash
 pnpm run start:dev
+```
 
-La API utiliza el puerto definido mediante la variable PORT.
+La API utiliza el puerto definido mediante la variable `PORT`.
 
 ## Swagger
 
 La documentación interactiva de la API está disponible en:
 
+```text
 http://localhost:3000/api/docs
+```
 
-Swagger permite consultar los endpoints disponibles y enviar solicitudes directamente a la API.
-Para los endpoints protegidos se utiliza autenticación mediante JWT.
+Swagger permite consultar los endpoints disponibles, visualizar los DTOs y enviar solicitudes directamente a la API.
+
+Los endpoints protegidos utilizan autenticación mediante JWT.
 
 ## Autenticación
 
 Se utiliza JSON Web Token para proteger los recursos.
 
-Primero se debe hacer el login:
+Primero se debe realizar el login:
 
+```text
 POST /auth/login
+```
 
 Ejemplo:
 
+```json
 {
-  "email": "usuario@example.com",
+  "email": "usuario@gmail.com",
   "password": "12345678"
 }
+```
 
 La respuesta contiene el token:
 
+```json
 {
   "token": "..."
 }
+```
 
-El token debe enviarse posteriormente mediante el header:
+El token debe enviarse posteriormente mediante el encabezado:
 
+```text
 Authorization: Bearer <token>
+```
+
+En Swagger se puede utilizar el botón **Authorize** para ingresar el token y acceder a los endpoints protegidos.
 
 ## Roles y permisos
 
-Se utilizan diferentes roles para controlar el acceso a los recursos:
+La API utiliza los siguientes roles:
 
-- RECEPCIONISTA
-- MEDICO
-- GERENCIA
+* `RECEPCIONISTA`
+* `MEDICO`
+* `GERENCIA`
 
-- Los Guards se encargan de validar la autenticación y autorización.
+Los Guards controlan la autenticación y autorización:
 
-- JwtAuthGuard comprueba que la solicitud contenga un token válido.
+* `JwtAuthGuard`: comprueba que exista un JWT válido.
+* `RolesGuard`: comprueba que el usuario tenga el rol requerido para acceder al endpoint.
 
-- Si el token no existe, es inválido o está expirado, responde con un error de autenticación.
+Si el token no existe, es inválido o está expirado, la solicitud es rechazada.
 
-- RolesGuard comprueba que el usuario autenticado tenga uno de los roles permitidos para el endpoint. Por ejemplo, para crear una cita: RECEPCIONISTA es el rol autorizado.
+## Endpoints principales
+
+### Autenticación
+
+#### Registrar usuario
+
+`POST /auth/register`
+
+#### Iniciar sesión
+
+`POST /auth/login`
+
+Permite autenticarse y obtener un JWT.
+
+---
+
+# Pacientes
+
+### Listar todos los pacientes registrados
+
+`GET /pacientes`
 
 
-## Citas
+### Consultar  datos de un paciente mediante su id 
 
-# Crear una cita
+`GET /pacientes/:id`
 
-POST /citas
 
-Requiere autenticación y rol RECEPCIONISTA.
+### Consultar expediente
 
-Ejemplo de solicitud:
+`GET /pacientes/:CI/expediente`
 
-{
-  "CI_paciente": 12345678,
-  "id_medico": 1,
-  "fecha_hora": "2026-10-01T10:00:00.000Z"
-}
+Permite consultar los datos del paciente junto con su historial de citas.
 
-La fecha de la cita debe corresponder a una fecha futura.
-Si los datos son válidos se crea la cita.
+El historial incluye:
 
-# Consultar citas
+* Fecha de la cita.
+* Estado.
+* Médico.
+* Especialidad.
 
-GET /citas
+### Crear un nuevo registro de paciente
+
+`POST /pacientes`
+
+
+### Actualizar los datos de un paciente
+
+`PATCH /pacientes/:id`
+
+
+### Eliminar paciente
+
+`DELETE /pacientes/:id`
+
+---
+
+# Médicos
+
+### Consultar médicos
+
+`GET /medicos`
+
+Permite consultar los médicos registrados. También permite filtrar médicos por especialidad.
+
+### Consultar datos de un médico
+
+`GET /medicos/:id`
+
+### Consultar agenda
+
+`GET /medicos/citas`
+
+Requiere autenticación y rol `MEDICO`.
+
+Permite al médico autenticado consultar sus propias citas.
+
+Puede utilizar los filtros:
+
+* `desde`
+* `hasta`
+
+Ejemplo:
+
+```text
+GET /medicos/citas?desde=2026-10-01T00:00:00.000Z&hasta=2026-10-31T23:59:59.999Z
+```
+
+El médico solamente puede consultar las citas que le corresponden.
+
+### Crear un nuevo médico
+
+`POST /medicos`
+
+
+### Actualizar datos de un médico
+
+`PATCH /medicos/:id`
+
+
+### Eliminar médico
+
+`DELETE /medicos/:id`
+
+
+---
+
+# Especialidades
+
+### Consultar especialidades disponibles
+
+`GET /especialidades`
+
+
+### Consultar especialidad por su id
+
+`GET /especialidades/:id`
+
+
+### Crear especialidad
+
+`POST /especialidades`
+
+
+### Actualizar especialidad
+
+`PATCH /especialidades/:id`
+
+
+### Eliminar especialidad
+
+`DELETE /especialidades/:id`
+
+---
+
+# Citas
+
+### Crear cita
+
+`POST /citas`
+
+Permite agendar una cita entre un paciente y un médico.
+
+Requiere autenticación y rol `RECEPCIONISTA`.
+
+Antes de crear la cita se valida que:
+
+* El paciente exista.
+* El médico exista.
+* La fecha no sea anterior a la fecha actual.
+
+### Consultar citas
+
+`GET /citas`
 
 Puede ser utilizado por:
 
-- RECEPCIONISTA
-- MEDICO
-- GERENCIA
+* `RECEPCIONISTA`
+* `MEDICO`
+* `GERENCIA`
 
-También permite aplicar filtros mediante:
-- desde
-- hasta
-El resultado depende del rol del usuario autenticado
+Permite aplicar los filtros:
 
-# Actualizar el estado de una cita
+* `desde`
+* `hasta`
 
-PATCH /citas/:id/estado
+El resultado depende del rol del usuario autenticado.
 
-Requiere autenticación y rol MEDICO.
+Un usuario con rol `MEDICO` solamente obtiene las citas asociadas al médico autenticado.
+
+### Actualizar el estado de una cita
+
+`PATCH /citas/:id/estado`
+
+Requiere autenticación y rol `MEDICO`.
+
+Permite actualizar el estado de una cita a:
+
+* `PROGRAMADA`
+* `COMPLETADA`
+* `CANCELADA`
 
 El médico solamente puede modificar una cita que le corresponda.
 
+---
 
-## Pacientes
+# Usuarios
+
+Los endpoint de usuarios requieren autenticación y rol `GERENCIA`
+
+### Consultar usuarios
+
+`GET /usuarios`
+
+### Consultar usuario por su id
+
+`GET /usuarios/:id`
+
+### Crear usuario
+
+`POST /usuarios`
+
+### Actualizar usuario
+
+`PUT /usuarios/:id`
+
+### Eliminar usuario
+
+`DELETE /usuarios/:id`
 
 
-## Validación
+# Validación
 
-## Manejo de errores
+Se utiliza un `ValidationPipe` global para validar los datos recibidos.
+Cuenta con:
 
-## LoggingInterceptor
+* `whitelist` : elimina automáticamente las propiedades que no están definidas en el DTO.
+* `forbidNonWhitelisted`: rechaza la solicitud si contiene propiedades no permitidas por el DTO.
+* `transform`: transforma los datos recibidos al tipo definido en el DTO.
 
-## Pipeline de NestJS
+Los DTOs utilizan `class-validator` para validar los datos antes de procesarlos.
 
-## Verificación de la API
+---
+
+# Manejo de errores
+
+Los errores conocidos de Prisma son transformados en respuestas HTTP mediante `PrismaExceptionFilter`.
+
+Algunos ejemplos:
+
+* `P2002` → `409 Conflict`: recurso duplicado.
+* `P2025` → `404 Not Found`: recurso no encontrado.
+* `P2003` → `409 Conflict`: conflicto con una relación existente.
+
+Además, los servicios validan los recursos relacionados antes de realizar determinadas operaciones.
+
+Por ejemplo, al crear una cita se verifica que el paciente y el médico existan.
+
+---
+
+# Logging
+
+Se utiliza un `LoggingInterceptor` para registrar las solicitudes HTTP y su tiempo de ejecución.
+
+Ejemplo:
+
+```text
+[HTTP] POST /citas — 12ms
+```
+
+---
+
+# Base de datos
+
+La aplicación utiliza PostgreSQL mediante Prisma ORM.
+
+Las principales relaciones de la base de datos son:
+
+* Paciente → Citas
+* Médico → Citas
+* Médico → Especialidad
+* Médico → Usuario
+
+Para visualizar los datos mediante Prisma Studio:
+
+```bash
+pnpm prisma studio
+```
+
+---
+
+# Pruebas principales
+
+Para comprobar el funcionamiento de la API se pueden realizar las siguientes pruebas:
+
+### 1. Login
+
+Realizar:
+
+```text
+POST /auth/login
+```
+
+Comprobar que se obtenga un JWT válido.
+
+### 2. Crear cita con paciente inexistente
+
+Enviar una cita utilizando un paciente que no exista.
+
+Resultado esperado:
+
+```text
+404 Not Found
+```
+
+### 3. Crear cita válida
+
+Enviar un paciente y médico existentes junto con una fecha futura.
+
+Resultado esperado:
+
+```text
+201 Created
+```
+
+### 4. Crear cita con fecha pasada
+
+Intentar crear una cita utilizando una fecha anterior a la actual.
+
+Resultado esperado:
+
+```text
+400 Bad Request
+```
+
+### 5. Probar autorización
+
+Acceder a un endpoint utilizando un usuario cuyo rol no tenga permisos.
+
+Resultado esperado:
+
+```text
+403 Forbidden
+```
+
+### 6. Probar Swagger
+
+Abrir:
+
+```text
+http://localhost:3000/api/docs
+```
+
+Comprobar los endpoints y utilizar **Authorize** para probar los recursos protegidos.
+
+### 7. Consultar expediente
+
+Realizar:
+
+```text
+GET /pacientes/:CI/expediente
+```
+
+Comprobar que se devuelva el paciente junto con sus citas, médico y especialidad.
