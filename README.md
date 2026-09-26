@@ -389,7 +389,7 @@ pnpm prisma studio
 
 Para comprobar el funcionamiento de la API se pueden realizar las siguientes pruebas:
 
-### 1. Login
+### Login
 
 Realizar:
 
@@ -399,7 +399,7 @@ POST /auth/login
 
 Comprobar que se obtenga un JWT válido.
 
-### 2. Crear cita con paciente inexistente
+### Crear cita con paciente inexistente
 
 Enviar una cita utilizando un paciente que no exista.
 
@@ -409,7 +409,7 @@ Resultado esperado:
 404 Not Found
 ```
 
-### 3. Crear cita válida
+### Crear cita válida
 
 Enviar un paciente y médico existentes junto con una fecha futura.
 
@@ -419,7 +419,7 @@ Resultado esperado:
 201 Created
 ```
 
-### 4. Crear cita con fecha pasada
+### Crear cita con fecha pasada
 
 Intentar crear una cita utilizando una fecha anterior a la actual.
 
@@ -429,7 +429,7 @@ Resultado esperado:
 400 Bad Request
 ```
 
-### 5. Probar autorización
+### Probar autorización
 
 Acceder a un endpoint utilizando un usuario cuyo rol no tenga permisos.
 
@@ -439,7 +439,7 @@ Resultado esperado:
 403 Forbidden
 ```
 
-### 6. Probar Swagger
+### Probar Swagger
 
 Abrir:
 
@@ -449,7 +449,7 @@ http://localhost:3000/api/docs
 
 Comprobar los endpoints y utilizar **Authorize** para probar los recursos protegidos.
 
-### 7. Consultar expediente
+### Consultar expediente
 
 Realizar:
 
